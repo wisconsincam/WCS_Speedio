@@ -58,7 +58,7 @@ properties = {
     description: "Preloads the next tool at a tool change (if any).",
     group      : "preferences",
     type       : "boolean",
-    value      : true,
+    value      : false,
     scope      : "post"
   },
   showSequenceNumbers: {
@@ -169,7 +169,7 @@ properties = {
       {title:"End of operation", id:"operationEnd"},
       {title:"Program end", id:"programEnd"}
     ],
-    value: "off",
+    value: "always",
     scope: "post"
   },
   usePitchForTapping: {
@@ -215,7 +215,7 @@ properties = {
       {title:"Finishing", id:"4"}, // 1
       {title:"Finishing high", id:"5"} // 2
     ],
-    value: "-1"
+    value: "9999"
   },
   useInverseTime: {
     title      : "Use inverse time feedrates",
