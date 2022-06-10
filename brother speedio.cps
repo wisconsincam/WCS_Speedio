@@ -35,6 +35,11 @@ allowHelicalMoves = true;
 allowedCircularPlanes = undefined; // allow any circular motion
 highFeedrate = (unit == IN) ? 500 : 5000;
 
+chipFanNegX=0;
+chipFanPosX=0;
+chipFanNegY=0;
+chipFanPosY=0;
+
 // user-defined properties
 properties = {
   writeMachine: {
@@ -59,6 +64,14 @@ properties = {
     group      : "preferences",
     type       : "boolean",
     value      : false,
+    scope      : "post"
+  },
+  useChipFanCall: {
+    title      : "Use Chip Fan call",
+    description: "Outputs a G65 call to the chip fan sub at the end of the program",
+    group      : "preferences",
+    type       : "boolean",
+    value      : true,
     scope      : "post"
   },
   showSequenceNumbers: {
@@ -587,11 +600,11 @@ function forceAny() {
 
 // Start of smoothing logic
 var smoothingSettings = {
-  roughing              : 2, // roughing level for smoothing in automatic mode
-  semi                  : 3, // semi-roughing level for smoothing in automatic mode
-  semifinishing         : 4, // semi-finishing level for smoothing in automatic mode
-  finishing             : 5, // finishing level for smoothing in automatic mode
-  thresholdRoughing     : toPreciseUnit(0.5, MM), // operations with stock/tolerance above that threshold will use roughing level in automatic mode
+  roughing              : 5, // roughing level for smoothing in automatic mode
+  semi                  : 5, // semi-roughing level for smoothing in automatic mode
+  semifinishing         : 1, // semi-finishing level for smoothing in automatic mode
+  finishing             : 0, // finishing level for smoothing in automatic mode
+  thresholdRoughing     : toPreciseUnit(0.25, MM), // operations with stock/tolerance above that threshold will use roughing level in automatic mode
   thresholdFinishing    : toPreciseUnit(0.05, MM), // operations with stock/tolerance below that threshold will use finishing level in automatic mode
   thresholdSemiFinishing: toPreciseUnit(0.1, MM), // operations with stock/tolerance above finishing and below threshold roughing that threshold will use semi finishing level in automatic mode
 
@@ -1037,6 +1050,18 @@ var probeOutputWorkOffset = 1;
 function onParameter(name, value) {
   if (name == "probe-output-work-offset") {
     probeOutputWorkOffset = (value > 0) ? value : 1;
+  }
+  if (name == "part-lower-x") {
+    chipFanNegX=value.toFixed(4);
+  }
+  if (name == "part-lower-y") {
+    chipFanNegY=value.toFixed(4);
+  }
+  if (name == "part-upper-x") {
+    chipFanPosX=value.toFixed(4);
+  }
+  if (name == "part-upper-y") {
+    chipFanPosY=value.toFixed(4);
   }
 }
 
@@ -3270,23 +3295,26 @@ function onClose() {
   writeln("");
   optionalSection = false;
 
-  setCoolant(COOLANT_OFF);
   if (tool.type != TOOL_PROBE && (getProperty("washdownCoolant") == "always" || getProperty("washdownCoolant") == "programEnd")) {
     if (getProperty("washdownCoolant") == "programEnd") {
       writeBlock(mFormat.format(washdownCoolant.on));
     }
     writeBlock(mFormat.format(washdownCoolant.off));
   }
+  
+  
+  if(getProperty("useChipFanCall")){
+	  writeBlock(gFormat.format(65), "P" + 2, "X" + chipFanNegX, "R" + chipFanPosX, "B" + chipFanPosY, "C" + chipFanNegY + " (Chip Fan Sub Call)");
+  }
 
   // reload first tool (handles retract)
-  writeBlock(gFormat.format(100), "T" + toolFormat.format(getSection(0).getTool().number));
+  writeBlock(gFormat.format(100), "T" + toolFormat.format(getSection(0).getTool().number) + " G53 X-350 Y0");
   if (useMultiAxisFeatures) {
     writeRetract(Z);
   } else {
     retracted = true; // tool call does a full retract along the z-axis
   }
 
-  writeRetract(X, Y);
   if (useMultiAxisFeatures) {
     writeBlock(gFormat.format(49));
     forceWorkPlane();
@@ -3310,4 +3338,11 @@ function onClose() {
 
 function setProperty(property, value) {
   properties[property].current = value;
+}
+
+function onPassThrough(text) {
+  var commands = String(text).split(",");
+  for (text in commands) {
+    writeBlock(commands[text]);
+  }
 }
