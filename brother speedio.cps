@@ -84,7 +84,7 @@ properties = {
       {title:"No", id:"false"},
       {title:"Only on tool change", id:"toolChange"}
     ],
-    value: "true",
+    value: "toolChange",
     scope: "post"
   },
   sequenceNumberStart: {
@@ -92,7 +92,7 @@ properties = {
     description: "The number at which to start the sequence numbers.",
     group      : "formats",
     type       : "integer",
-    value      : 10,
+    value      : 1,
     scope      : "post"
   },
   sequenceNumberIncrement: {
@@ -100,7 +100,7 @@ properties = {
     description: "The amount by which the sequence number is incremented by in each block.",
     group      : "formats",
     type       : "integer",
-    value      : 5,
+    value      : 1,
     scope      : "post"
   },
   optionalStop: {
@@ -1282,11 +1282,11 @@ function onSection() {
   // add dwell for through coolant if needed
   if (tool.coolant == COOLANT_THROUGH_TOOL || tool.coolant == COOLANT_AIR_THROUGH_TOOL || tool.coolant == COOLANT_FLOOD_THROUGH_TOOL) {
     if (isFirstSection()) {
-      onDwell(1);
+      onDwell(.5);
     } else {
       var lastCoolant = getPreviousSection().getTool().coolant;
       if (!(lastCoolant == COOLANT_THROUGH_TOOL || lastCoolant == COOLANT_AIR_THROUGH_TOOL || lastCoolant == COOLANT_FLOOD_THROUGH_TOOL)) {
-        onDwell(1);
+        onDwell(.5);
       }
     }
   }
@@ -1372,7 +1372,7 @@ function onDwell(seconds) {
   if (seconds > 99999.999) {
     warning(localize("Dwelling time is out of range."));
   }
-  seconds = clamp(1, seconds, 99999999);
+  seconds = clamp(.01, seconds, 99999999);
   writeBlock(gFeedModeModal.format(94), gFormat.format(4), "P" + secFormat.format(seconds));
 }
 
@@ -1513,7 +1513,7 @@ function onCyclePoint(x, y, z) {
     }
 
     var F = cycle.feedrate;
-    var P = !cycle.dwell ? 0 : clamp(1, cycle.dwell, 99999999); // in seconds
+    var P = !cycle.dwell ? 0 : clamp(.01, cycle.dwell, 99999999); // in seconds
 
     // tapping variables
     var tapUnit = unit;
