@@ -1462,7 +1462,7 @@ function protectedProbeMove(_cycle, x, y, z) {
   var _code = getProperty("probingType") == "Renishaw" ? 8810 : 8703;
   var mCall;
   if(!isFirstSection()){
-	  mCall = getPreviousSection().getTool().type == TOOL_PROBE ? 3 : isFirstProtected ? 1 : 3; //flag
+	  mCall = getPreviousSection().getTool().type == TOOL_PROBE ? 3 : isFirstProtected ? 1 : 3;
   }
   else{
 	  mCall = isFirstProtected ? 1 : 3;
@@ -2861,6 +2861,9 @@ function onSectionEnd() {
   }
   if (!isLastSection() && (getNextSection().getTool().coolant != tool.coolant)) {
     setCoolant(COOLANT_OFF);
+  }
+  if (isProbeOperation() && !(getNextSection().getTool().type == TOOL_PROBE)) {
+	writeBlock(mFormat.format(299));//allow high accuracy mode again after probing
   }
   forceAny();
 }
