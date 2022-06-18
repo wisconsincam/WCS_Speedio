@@ -1171,7 +1171,10 @@ function onSection() {
     }
     setRotation(remaining);
   }
-
+	if (toolChecked) {
+        forceSpindleSpeed = true; // spindle must be restarted if tool is checked without a tool change
+        toolChecked = false; // state of tool is not known at the beginning of a section since it could be broken for the previous section
+    }
   var spindleChanged = tool.type != TOOL_PROBE &&
     (insertToolCall || forceSpindleSpeed || isFirstSection() ||
     (rpmFormat.areDifferent(spindleSpeed, getPreviousSection().getTool().spindleRPM)) ||
@@ -2821,7 +2824,14 @@ function onCommand(command) {
   case COMMAND_STOP_CHIP_TRANSPORT:
     return;
   case COMMAND_BREAK_CONTROL:
-    return;
+            if (!toolChecked) { // avoid duplicate COMMAND_BREAK_CONTROL
+                onCommand(COMMAND_STOP_SPINDLE);
+                setCoolant(COOLANT_OFF);
+                writeRetract(Z); //retract Z
+				writeBlock(mFormat.format(500) + " E.25");
+                toolChecked = true;
+            }
+	return;
   case COMMAND_TOOL_MEASURE:
     return;
   }
@@ -2835,6 +2845,8 @@ function onCommand(command) {
   }
 }
 
+var toolChecked = false; // specifies that the tool has been checked with the probe
+
 function onSectionEnd() {
   if (currentSection.isMultiAxis()) {
     writeBlock(gFeedModeModal.format(94)); // inverse time feed off
@@ -2846,8 +2858,11 @@ function onSectionEnd() {
   writeBlock(gPlaneModal.format(17));
 
   if (((getCurrentSectionId() + 1) >= getNumberOfSections()) ||
-      (tool.number != getNextSection().getTool().number)) {
+      (tool.number != getNextSection().getTool().number) && tool.breakControl) {
     onCommand(COMMAND_BREAK_CONTROL);
+  }
+  else{
+		toolChecked = false;
   }
 
   // the code below gets the machine angles from previous operation.  closestABC must also be set to true
