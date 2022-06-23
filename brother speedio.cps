@@ -2824,7 +2824,7 @@ function onCommand(command) {
   case COMMAND_STOP_CHIP_TRANSPORT:
     return;
   case COMMAND_BREAK_CONTROL:
-            if (!toolChecked && tool.breakControl) { // avoid duplicate COMMAND_BREAK_CONTROL
+            if (!toolChecked) { // avoid duplicate COMMAND_BREAK_CONTROL
                 onCommand(COMMAND_STOP_SPINDLE);
                 setCoolant(COOLANT_OFF);
                 writeRetract(Z); //retract Z
@@ -2859,7 +2859,7 @@ function onSectionEnd() {
 
   if (((getCurrentSectionId() + 1) >= getNumberOfSections()) ||
       (tool.number != getNextSection().getTool().number) && tool.breakControl) {
-    onCommand(COMMAND_BREAK_CONTROL);
+    if(tool.breakControl)onCommand(COMMAND_BREAK_CONTROL);
   }
   else{
 		toolChecked = false;
