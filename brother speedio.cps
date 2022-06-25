@@ -1955,7 +1955,7 @@ function onCyclePoint(x, y, z) {
           "S" + xyzFormat.format(cycle.width1),
           "X1",
 		  "I" + xyzFormat.format(x),
-          getProbingArguments(cycle, true)
+          getProbingArguments(cycle, true, true)
         );
         zOutput.reset();
        writeBlock(
@@ -1976,7 +1976,7 @@ function onCyclePoint(x, y, z) {
 		  "I" + xyzFormat.format(x),
           "Z" + xyzFormat.format(-cycle.depth),
           "R" + xyzFormat.format(cycle.probeClearance),
-          getProbingArguments(cycle, true)
+          getProbingArguments(cycle, true, true)
         );
         zOutput.reset();
         writeBlock(
@@ -1999,7 +1999,7 @@ function onCyclePoint(x, y, z) {
 		  "I" + xyzFormat.format(x),
 		  "R" + -xyzFormat.format(cycle.probeClearance),
 		  "Z" + xyzFormat.format(-cycle.depth),
-          getProbingArguments(cycle, true)
+          getProbingArguments(cycle, true, true)
         );
         zOutput.reset();
        writeBlock(
@@ -2042,7 +2042,7 @@ function onCyclePoint(x, y, z) {
   }
 }
 
-function getProbingArguments(cycle, updateWCS) {
+function getProbingArguments(cycle, updateWCS, overRideMCall) {
   var outputWCSCode = updateWCS && currentSection.strategy == "probe";
   if (outputWCSCode) {
     validate(probeOutputWorkOffset <= 99, "Work offset is out of range.");
@@ -2057,7 +2057,7 @@ function getProbingArguments(cycle, updateWCS) {
       (cycle.outOfPositionAction == "stop-message" ? "T" + xyzFormat.format(cycle.tolerancePosition ? -1 * cycle.tolerancePosition : 0) : undefined),
       (cycle.updateToolWear ? "E" + xyzFormat.format(cycle.toolWearNumber) : undefined),
       conditional(outputWCSCode, "W" + probeWCSFormat.format(probeOutputWorkOffset > 6 ? -1 * (probeOutputWorkOffset - 6) : (probeOutputWorkOffset + 53))),
-	  ("M" + (getNextSection().getTool().type == TOOL_PROBE ? 3 : 2))
+	  ("M" + (overRideMCall ? 3 : (getNextSection().getTool().type == TOOL_PROBE ? 3 : 2)))
     ];
 }
 
