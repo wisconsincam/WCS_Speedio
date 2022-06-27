@@ -1307,7 +1307,7 @@ function onSection() {
     }
   }
 
-  if (tool.type != TOOL_PROBE && isFirstSection() && (getProperty("washdownCoolant") == "always")) {
+  if (isFirstSection() && (getProperty("washdownCoolant") == "always")) {
     writeBlock(mFormat.format(washdownCoolant.on));
   }
 
@@ -3074,7 +3074,7 @@ function onClose() {
   
   
   if(getProperty("useChipFanCall")){
-	  writeBlock(gFormat.format(65), "P" + 2, "X" + chipFanNegX, "R" + chipFanPosX, "B" + chipFanPosY, "C" + chipFanNegY + " (Chip Fan Sub Call)");
+	  writeBlock("/" + gFormat.format(65), "P" + 2, "X" + chipFanNegX, "R" + chipFanPosX, "B" + chipFanPosY, "C" + chipFanNegY + " (Chip Fan Sub Call)");
   }
 
   // reload first tool (handles retract)
