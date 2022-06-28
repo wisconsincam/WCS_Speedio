@@ -1286,11 +1286,11 @@ function onSection() {
   // add dwell for through coolant if needed
   if (tool.coolant == COOLANT_THROUGH_TOOL || tool.coolant == COOLANT_AIR_THROUGH_TOOL || tool.coolant == COOLANT_FLOOD_THROUGH_TOOL) {
     if (isFirstSection()) {
-      onDwell(.5);
+      //onDwell(.5);
     } else {
       var lastCoolant = getPreviousSection().getTool().coolant;
       if (!(lastCoolant == COOLANT_THROUGH_TOOL || lastCoolant == COOLANT_AIR_THROUGH_TOOL || lastCoolant == COOLANT_FLOOD_THROUGH_TOOL)) {
-        onDwell(.5);
+        //onDwell(.5);
       }
     }
   }
