@@ -2052,12 +2052,20 @@ function getProbingArguments(cycle, updateWCS, overRideMCall) {
     }
   }
     isFirstProtected = true;
+	var mCall;
+	if(overRideMCall){
+		mCall = 3;
+	}else if(hasNextSection()){
+		mCall = getNextSection().getTool().type == TOOL_PROBE ? 3 : 2;
+	}else{
+		mCall = 2;
+	}
 	return [
       (cycle.wrongSizeAction == "stop-message" ? "T" + xyzFormat.format(cycle.toleranceSize ? cycle.toleranceSize : 0) : undefined),
       (cycle.outOfPositionAction == "stop-message" ? "T" + xyzFormat.format(cycle.tolerancePosition ? -1 * cycle.tolerancePosition : 0) : undefined),
       (cycle.updateToolWear ? "E" + xyzFormat.format(cycle.toolWearNumber) : undefined),
       conditional(outputWCSCode, "W" + probeWCSFormat.format(probeOutputWorkOffset > 6 ? -1 * (probeOutputWorkOffset - 6) : (probeOutputWorkOffset + 53))),
-	  ("M" + (overRideMCall ? 3 : (getNextSection().getTool().type == TOOL_PROBE ? 3 : 2)))
+	  ("M" + mCall)
     ];
 }
 
@@ -2877,7 +2885,9 @@ function onSectionEnd() {
   if (!isLastSection() && (getNextSection().getTool().coolant != tool.coolant)) {
     setCoolant(COOLANT_OFF);
   }
-  if (isProbeOperation() && !(getNextSection().getTool().type == TOOL_PROBE)) {
+  if (isProbeOperation() && hasNextSection() && !(getNextSection().getTool().type == TOOL_PROBE)) {
+	writeBlock(mFormat.format(299));//allow high accuracy mode again after probing
+  }else if(!hasNextSection() && tool.type == TOOL_PROBE){
 	writeBlock(mFormat.format(299));//allow high accuracy mode again after probing
   }
   forceAny();
