@@ -1780,7 +1780,7 @@ function onCyclePoint(x, y, z) {
       writeBlock(
         gFormat.format(65), "P8700",
         "Z" + xyzFormat.format(approach(cycle.approach1) * (cycle.probeClearance)),
-		"K" + xyzFormat.format(Math.min(z - cycle.depth + cycle.probeClearance, cycle.retract) + (approach(cycle.approach1) * (cycle.probeClearance))),
+		"K" + xyzFormat.format(-(cycle.depth - z)),
         getProbingArguments(cycle, true)
       );
       break;
