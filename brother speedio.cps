@@ -1589,101 +1589,26 @@ function onCyclePoint(x, y, z) {
       }
       break;
     case "tapping":
-      if (!F) {
-        F = tool.getTappingFeedrate();
-      }
-      if (getProperty("usePitchForTapping")) {
-        writeBlock(
-          gRetractModal.format(98), gCycleModal.format((tool.type == TOOL_TAP_LEFT_HAND) ? 74 : 77),
-          getCommonCycle(x, y, cycle.bottom, cycle.retract),
-          conditional((P != 0), "P" + secFormat.format(P)),
-          conditional((tapUnit == IN), "J" + xyzFormat.format(threadsPerInch)),
-          conditional((tapUnit == MM), "I" + xyzFormat.format(threadPitch)),
-          conditional(getProperty("doubleTapWithdrawSpeed"), "L" + (spindleSpeed * 2 > 6000 ? 6000 : spindleSpeed * 2))
-        );
-      } else {
-        writeBlock(
-          gRetractModal.format(98), gCycleModal.format((tool.type == TOOL_TAP_LEFT_HAND) ? 74 : 77),
-          getCommonCycle(x, y, cycle.bottom, cycle.retract),
-          "P" + secFormat.format(P),
-          cyclefeedOutput.format(F)
-        );
-      }
-      break;
-    case "left-tapping":
-      if (!F) {
-        F = tool.getTappingFeedrate();
-      }
-      if (getProperty("usePitchForTapping")) {
-        writeBlock(
-          gRetractModal.format(98), gCycleModal.format(74),
-          getCommonCycle(x, y, cycle.bottom, cycle.retract),
-          conditional((P != 0), "P" + secFormat.format(P)),
-          conditional((tapUnit == IN), "J" + xyzFormat.format(threadsPerInch)),
-          conditional((tapUnit == MM), "I" + xyzFormat.format(threadPitch)),
-          conditional(getProperty("doubleTapWithdrawSpeed"), "L" + (spindleSpeed * 2 > 6000 ? 6000 : spindleSpeed * 2))
-        );
-      } else {
-        writeBlock(
-          gRetractModal.format(98), gCycleModal.format(74),
-          getCommonCycle(x, y, z, cycle.retract),
-          "P" + secFormat.format(P),
-          cyclefeedOutput.format(F)
-        );
-      }
-      break;
-    case "right-tapping":
-      if (!F) {
-        F = tool.getTappingFeedrate();
-      }
-      if (getProperty("usePitchForTapping")) {
-        writeBlock(
-          gRetractModal.format(98), gCycleModal.format(77),
-          getCommonCycle(x, y, cycle.bottom, cycle.retract),
-          conditional((P != 0), "P" + secFormat.format(P)),
-          conditional((tapUnit == IN), "J" + xyzFormat.format(threadsPerInch)),
-          conditional((tapUnit == MM), "I" + xyzFormat.format(threadPitch)),
-          conditional(getProperty("doubleTapWithdrawSpeed"), "L" + (spindleSpeed * 2 > 6000 ? 6000 : spindleSpeed * 2))
-        );
-      } else {
-        writeBlock(
-          gRetractModal.format(98), gCycleModal.format(77),
-          getCommonCycle(x, y, z, cycle.retract),
-          "P" + secFormat.format(P),
-          cyclefeedOutput.format(F)
-        );
-      }
-      break;
-    case "tapping-with-chip-breaking":
+	case "left-tapping":
+	case "right-tapping":
+	case "tapping-with-chip-breaking":
     case "left-tapping-with-chip-breaking":
     case "right-tapping-with-chip-breaking":
-      if (cycle.accumulatedDepth < cycle.depth) {
-        error(localize("Accumulated pecking depth is not supported for tapping cycles with chip breaking."));
-        return;
-      } else {
-        if (!F) {
-          F = tool.getTappingFeedrate();
-        }
-        if (getProperty("usePitchForTapping")) {
-          writeBlock(
-            gRetractModal.format(98), gCycleModal.format((tool.type == TOOL_TAP_LEFT_HAND) ? 74 : 77),
-            getCommonCycle(x, y, cycle.bottom, cycle.retract),
-            conditional((P != 0), "P" + secFormat.format(P)),
-            "Q" + xyzFormat.format(cycle.incrementalDepth),
-            conditional((tapUnit == IN), "J" + xyzFormat.format(threadsPerInch)),
-            conditional((tapUnit == MM), "I" + xyzFormat.format(threadPitch)),
-            conditional(getProperty("doubleTapWithdrawSpeed"), "L" + (spindleSpeed * 2 > 6000 ? 6000 : spindleSpeed * 2))
-          );
-        } else {
-          writeBlock(
-            gRetractModal.format(98), gCycleModal.format((tool.type == TOOL_TAP_LEFT_HAND ? 74 : 77)),
-            getCommonCycle(x, y, z, cycle.retract),
-            "P" + secFormat.format(P),
-            "Q" + xyzFormat.format(cycle.incrementalDepth),
-            feedOutput.format(F)
-          );
-        }
-      }
+		var tappingCycle;
+		if(cycleType.indexOf("breaking") != -1){
+			tappingCycle=(tool.type == TOOL_TAP_LEFT_HAND) ? 278 : 277; //chip break codes
+		}else{
+			tappingCycle=(tool.type == TOOL_TAP_LEFT_HAND) ? 78 : 77; //no chip break codes
+		}
+        writeBlock(
+          gRetractModal.format(98), gCycleModal.format(tappingCycle),
+          getCommonCycle(x, y, cycle.bottom, cycle.retract),
+          conditional((P != 0), "P" + secFormat.format(P)),
+		  conditional(cycleType.indexOf("breaking") != -1,"Q" + xyzFormat.format(cycle.incrementalDepth)), //only put Q if there is chip breaking
+          conditional((tapUnit == IN), "J" + xyzFormat.format(threadsPerInch)),
+          conditional((tapUnit == MM), "I" + xyzFormat.format(threadPitch)),
+          conditional(getProperty("doubleTapWithdrawSpeed"), "L" + (spindleSpeed * 2 > 6000 ? 6000 : spindleSpeed * 2))
+        );
       break;
     case "fine-boring":
       writeBlock(
