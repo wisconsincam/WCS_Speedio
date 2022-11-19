@@ -672,7 +672,7 @@ function initializeSmoothing() {
     smoothingSettings.roughing = 5;
     smoothingSettings.semi = 3;
     smoothingSettings.semifinishing = 1;
-    smoothingSettings.finishing = 2;
+    smoothingSettings.finishing = 5;//was 2
     smoothing.level = (smoothing.level >= 0 && smoothing.level <= 5) ? [0, 5, 3, 4, 1, 2][smoothing.level] : smoothing.level;
     break;
   }
