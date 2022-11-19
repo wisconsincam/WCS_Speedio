@@ -421,6 +421,32 @@ function writeComment(text) {
   writeln(formatComment(text));
 }
 
+function dupeToolCheck() { // check for duplicate tool number
+    for (var i = 0; i < getNumberOfSections(); ++i) {
+        var sectioni = getSection(i);
+        var tooli = sectioni.getTool();
+        for (var j = i + 1; j < getNumberOfSections(); ++j) {
+            var sectionj = getSection(j);
+            var toolj = sectionj.getTool();
+            if (tooli.number == toolj.number) {
+                if (xyzFormat.areDifferent(tooli.diameter, toolj.diameter) ||
+                    xyzFormat.areDifferent(tooli.cornerRadius, toolj.cornerRadius) ||
+                    abcFormat.areDifferent(tooli.taperAngle, toolj.taperAngle) ||
+                    (tooli.numberOfFlutes != toolj.numberOfFlutes)) {
+                    error(
+                        subst(
+                            localize("Using the same tool number for different cutter geometry for operation '%1' and '%2'."),
+                            sectioni.hasParameter("operation-comment") ? sectioni.getParameter("operation-comment") : ("#" + (i + 1)),
+                            sectionj.hasParameter("operation-comment") ? sectionj.getParameter("operation-comment") : ("#" + (j + 1))
+                        )
+                    );
+                    return;
+                }
+            }
+        }
+    }
+}
+
 function onOpen() {
   if (getProperty("useRadius")) {
     maximumCircularSweep = toRad(90); // avoid potential center calculation errors for CNC
@@ -522,6 +548,8 @@ function onOpen() {
       }
     }
   }
+
+	dupeToolCheck();
 
   if (false) {
     // check for duplicate tool number
