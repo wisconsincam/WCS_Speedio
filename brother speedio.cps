@@ -3034,7 +3034,7 @@ function onClose() {
   writeln("");
   optionalSection = false;
 
-  if (tool.type != TOOL_PROBE && (getProperty("washdownCoolant") == "always" || getProperty("washdownCoolant") == "programEnd")) {
+  if (getProperty("washdownCoolant") == "always" || getProperty("washdownCoolant") == "programEnd") {
     if (getProperty("washdownCoolant") == "programEnd") {
       writeBlock(mFormat.format(washdownCoolant.on));
     }
