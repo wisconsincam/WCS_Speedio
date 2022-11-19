@@ -1091,7 +1091,7 @@ function onSection() {
   if (insertToolCall || newWorkOffset || newWorkPlane || smoothing.isDifferent) {
     // stop spindle before retract during tool change
     if (insertToolCall && !isFirstSection()) {
-      onCommand(COMMAND_STOP_SPINDLE);
+      //onCommand(COMMAND_STOP_SPINDLE);//save time by letting g100 stop spindle
       if (useMultiAxisFeatures) {
         writeRetract(Z);
         writeBlock(gFormat.format(49));
@@ -1215,7 +1215,7 @@ function onSection() {
       conditional(!useMultiAxisFeatures, hFormat.format(tool.lengthOffset)),
       conditional(tool.type != TOOL_PROBE, dFormat.format(tool.diameterOffset)),
       conditional(tool.type != TOOL_PROBE, sOutput.format(spindleSpeed)),
-      conditional(tool.type != TOOL_PROBE, mFormat.format(tool.clockwise ? 3 : 4))
+      conditional(tool.type != TOOL_PROBE && !isTappingCycle(currentSection), mFormat.format(tool.clockwise ? 3 : 4))//flag
     );
     forceSpindleSpeed = false;
 
@@ -2835,7 +2835,7 @@ function onCommand(command) {
             if (!toolChecked) { // avoid duplicate COMMAND_BREAK_CONTROL
                 onCommand(COMMAND_STOP_SPINDLE);
                 setCoolant(COOLANT_OFF);
-                writeRetract(Z); //retract Z
+                //writeBlock("G53 G0 Z480.");//put retract in the macro program
 				writeBlock(mFormat.format(500) + " E.25");
                 toolChecked = true;
             }
