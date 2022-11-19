@@ -591,7 +591,10 @@ function onOpen() {
   writeBlock(gFormat.format(0), gAbsIncModal.format(90), gFormat.format(40), gFormat.format(80));
   writeBlock(gFeedModeModal.format(94), gFormat.format(49));
 
-  writeComment("File output in " + (unit == 1 ? "MM" : "inches") + ". Please ensure the unit is set correctly on the control");
+  //writeComment("File output in " + (unit == 1 ? "MM" : "inches") + ". Please ensure the unit is set correctly on the control");//flag
+  if(unit != 1){
+	error(localize("Unit is not MM"));
+  }
 }
 
 function onComment(message) {
@@ -1243,7 +1246,7 @@ function onSection() {
       conditional(!useMultiAxisFeatures, hFormat.format(tool.lengthOffset)),
       conditional(tool.type != TOOL_PROBE, dFormat.format(tool.diameterOffset)),
       conditional(tool.type != TOOL_PROBE, sOutput.format(spindleSpeed)),
-      conditional(tool.type != TOOL_PROBE && !isTappingCycle(currentSection), mFormat.format(tool.clockwise ? 3 : 4))//flag
+      conditional(tool.type != TOOL_PROBE && !isTappingCycle(currentSection), mFormat.format(tool.clockwise ? 3 : 4))
     );
     forceSpindleSpeed = false;
 
