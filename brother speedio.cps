@@ -591,7 +591,7 @@ function onOpen() {
   writeBlock(gFormat.format(0), gAbsIncModal.format(90), gFormat.format(40), gFormat.format(80));
   writeBlock(gFeedModeModal.format(94), gFormat.format(49));
 
-  //writeComment("File output in " + (unit == 1 ? "MM" : "inches") + ". Please ensure the unit is set correctly on the control");//flag
+  //writeComment("File output in " + (unit == 1 ? "MM" : "inches") + ". Please ensure the unit is set correctly on the control");
   if(unit != 1){
 	error(localize("Unit is not MM"));
   }
@@ -1215,7 +1215,7 @@ function onSection() {
       error(localize("Spindle speed out of range."));
       return;
     }
-    if (spindleSpeed > 99999) {
+    if (spindleSpeed > 16000) {
       warning(localize("Spindle speed exceeds maximum value."));
     }
   }
@@ -1625,6 +1625,9 @@ function onCyclePoint(x, y, z) {
 	case "tapping-with-chip-breaking":
     case "left-tapping-with-chip-breaking":
     case "right-tapping-with-chip-breaking":
+		if (spindleSpeed > 6000) {
+			error(localize("Tapping speed exceeds maximum value."));
+		}
 		var tappingCycle;
 		if(cycleType.indexOf("breaking") != -1){
 			tappingCycle=(tool.type == TOOL_TAP_LEFT_HAND) ? 278 : 277; //chip break codes
