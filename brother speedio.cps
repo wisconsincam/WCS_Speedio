@@ -1215,8 +1215,8 @@ function onSection() {
       error(localize("Spindle speed out of range."));
       return;
     }
-    if (spindleSpeed > 16000) {
-      warning(localize("Spindle speed exceeds maximum value."));
+    if (spindleSpeed.toFixed(4) > 16000) {
+	  error(localize("Spindle speed exceeds maximum value."));
     }
   }
 
@@ -1975,7 +1975,15 @@ function onCyclePoint(x, y, z) {
         error(localize("XY inner corner probing is not supported."));
       break;
     case "probing-xy-outer-corner":
-		error(localize("XY outter corner probing is not supported."));
+		protectedProbeMove(cycle, x, y, z - cycle.depth);
+		writeBlock(
+			gFormat.format(65), "P8700",
+			"X" + xyzFormat.format(approach(cycle.approach1) * (cycle.probeClearance * 2 + tool.diameter / 2)),
+			"Y" + xyzFormat.format(approach(cycle.approach2) * (cycle.probeClearance * 2 + tool.diameter / 2)),
+			"I" + xyzFormat.format(x + approach(cycle.approach1) * (cycle.probeClearance + tool.diameter / 2)),
+			"J" + xyzFormat.format(y + approach(cycle.approach2) * (cycle.probeClearance + tool.diameter / 2)),
+			getProbingArguments(cycle, true)
+		);
       break;
     case "probing-x-plane-angle":
         error(localize("X angle probing is not supported."));
