@@ -433,13 +433,15 @@ function dupeToolCheck() { // check for duplicate tool number
                     xyzFormat.areDifferent(tooli.cornerRadius, toolj.cornerRadius) ||
                     abcFormat.areDifferent(tooli.taperAngle, toolj.taperAngle) ||
                     (tooli.numberOfFlutes != toolj.numberOfFlutes)) {
-                    error(
-                        subst(
-                            localize("Using the same tool number for different cutter geometry for operation '%1' and '%2'."),
-                            sectioni.hasParameter("operation-comment") ? sectioni.getParameter("operation-comment") : ("#" + (i + 1)),
-                            sectionj.hasParameter("operation-comment") ? sectionj.getParameter("operation-comment") : ("#" + (j + 1))
-                        )
-                    );
+                    if(!(tooli.type == TOOL_PROBE && toolj.type == TOOL_PROBE)){
+						error(
+							subst(
+								localize("Using the same tool number for different cutter geometry for operation '%1' and '%2'."),
+								sectioni.hasParameter("operation-comment") ? sectioni.getParameter("operation-comment") : ("#" + (i + 1)),
+								sectionj.hasParameter("operation-comment") ? sectionj.getParameter("operation-comment") : ("#" + (j + 1))
+							)
+						);
+					}
                     return;
                 }
             }
@@ -3055,7 +3057,7 @@ function onClose() {
   }
 
   // reload first tool (handles retract)
-  writeBlock(gFormat.format(100), "T" + toolFormat.format(getSection(0).getTool().number) + " G53 X-350 Y0");
+  writeBlock(gFormat.format(100), "T" + toolFormat.format(getSection(0).getTool().number) + " G53 X-500 Y0");
   if (useMultiAxisFeatures) {
     writeRetract(Z);
   } else {
