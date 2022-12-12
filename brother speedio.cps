@@ -198,7 +198,7 @@ properties = {
     description: "If enabled, a L value containing double the spindle speed (up to 6000) will be output in the G77 tapping cycle.",
     group      : "preferences",
     type       : "boolean",
-    value      : false,
+    value      : true,
     scope      : "post"
   },
   smoothingMode: {
@@ -1643,7 +1643,7 @@ function onCyclePoint(x, y, z) {
 		  conditional(cycleType.indexOf("breaking") != -1,"Q" + xyzFormat.format(cycle.incrementalDepth)), //only put Q if there is chip breaking
           conditional((tapUnit == IN), "J" + xyzFormat.format(threadsPerInch)),
           conditional((tapUnit == MM), "I" + xyzFormat.format(threadPitch)),
-          conditional(getProperty("doubleTapWithdrawSpeed"), "L" + (spindleSpeed * 2 > 6000 ? 6000 : spindleSpeed * 2))
+          conditional(getProperty("doubleTapWithdrawSpeed"), "L" + clamp(300, spindleSpeed*2, 6000).toFixed(0))
         );
       break;
     case "fine-boring":
