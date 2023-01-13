@@ -671,7 +671,7 @@ function initializeSmoothing() {
   switch (getProperty("smoothingMode")) {
   case "A":
   case "B":
-    smoothingSettings.roughing = 5;
+    smoothingSettings.roughing = 9;
     smoothingSettings.semi = 3;
     smoothingSettings.semifinishing = 1;
     smoothingSettings.finishing = 5;//was 2
@@ -3057,6 +3057,8 @@ function onClose() {
   }
 
   // reload first tool (handles retract)
+  sequenceNumber = 99;
+  setProperty("showSequenceNumbers", "true");
   writeBlock(gFormat.format(100), "T" + toolFormat.format(getSection(0).getTool().number) + " G53 X-500 Y0");
   if (useMultiAxisFeatures) {
     writeRetract(Z);
