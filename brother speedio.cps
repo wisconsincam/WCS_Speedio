@@ -2802,9 +2802,7 @@ function onCommand(command) {
     return;
   case COMMAND_BREAK_CONTROL:
             if (!toolChecked) { // avoid duplicate COMMAND_BREAK_CONTROL
-                //onCommand(COMMAND_STOP_SPINDLE);
                 setCoolant(COOLANT_OFF);
-                //writeBlock("G53 G0 Z480.");//put retract in the macro program
                 writeBlock(mFormat.format(500) + " E.25");
                 toolChecked = true;
             }
