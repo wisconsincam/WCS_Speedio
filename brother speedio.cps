@@ -1836,9 +1836,9 @@ function onCyclePoint(x, y, z) {
 	  writeBlock(
           gFormat.format(65), "P" + 8700,
           "S" + xyzFormat.format(cycle.width1),
-		  "H" + xyzFormat.format(cycle.partialCircleAngleA),
-          "U" + xyzFormat.format(cycle.partialCircleAngleB),
-          "V" + xyzFormat.format(cycle.partialCircleAngleC),
+          "H" + cycle.partialCircleAngleA.toFixed(0),
+          "U" + cycle.partialCircleAngleB.toFixed(0),
+          "V" + cycle.partialCircleAngleC.toFixed(0),
           "I" + xyzFormat.format(x),
 		  "J" + xyzFormat.format(y),
 		  "Z" + xyzFormat.format(-cycle.depth),
@@ -1867,9 +1867,9 @@ function onCyclePoint(x, y, z) {
       writeBlock(
           gFormat.format(65), "P" + 8700,
           "S" + xyzFormat.format(cycle.width1),
-		  "H" + xyzFormat.format(cycle.partialCircleAngleA),
-          "U" + xyzFormat.format(cycle.partialCircleAngleB),
-          "V" + xyzFormat.format(cycle.partialCircleAngleC),
+          "H" + cycle.partialCircleAngleA.toFixed(0),
+          "U" + cycle.partialCircleAngleB.toFixed(0),
+          "V" + cycle.partialCircleAngleC.toFixed(0),
           "I" + xyzFormat.format(x),
 		  "J" + xyzFormat.format(y),
           getProbingArguments(cycle, true)
@@ -1898,9 +1898,9 @@ function onCyclePoint(x, y, z) {
 		writeBlock(
           gFormat.format(65), "P" + 8700,
           "S" + xyzFormat.format(cycle.width1),
-		  "H" + xyzFormat.format(cycle.partialCircleAngleA),
-          "U" + xyzFormat.format(cycle.partialCircleAngleB),
-          "V" + xyzFormat.format(cycle.partialCircleAngleC),
+          "H" + cycle.partialCircleAngleA.toFixed(0),
+          "U" + cycle.partialCircleAngleB.toFixed(0),
+          "V" + cycle.partialCircleAngleC.toFixed(0),
           "I" + xyzFormat.format(x),
 		  "J" + xyzFormat.format(y),
 		  "R" + -xyzFormat.format(cycle.probeClearance),
