@@ -40,6 +40,8 @@ chipFanPosX=0;
 chipFanNegY=0;
 chipFanPosY=0;
 
+sourceComment="";
+
 // user-defined properties
 properties = {
   writeMachine: {
@@ -550,7 +552,7 @@ function onOpen() {
       }
     }
   }
-
+  
 	dupeToolCheck();
 
   if (false) {
@@ -1085,21 +1087,27 @@ function onParameter(name, value) {
   if (name == "probe-output-work-offset") {
     probeOutputWorkOffset = (value > 0) ? value : 1;
   }
-  if (name == "part-lower-x") {
+  else if (name == "part-lower-x") {
     chipFanNegX=value.toFixed(4);
   }
-  if (name == "part-lower-y") {
+  else if (name == "part-lower-y") {
     chipFanNegY=value.toFixed(4);
   }
-  if (name == "part-upper-x") {
+  else if (name == "part-upper-x") {
     chipFanPosX=value.toFixed(4);
   }
-  if (name == "part-upper-y") {
+  else if (name == "part-upper-y") {
     chipFanPosY=value.toFixed(4);
+  }
+  else if (name == "document-path") {
+    sourceComment = ("F360 Project - " + value);
   }
 }
 
 function onSection() {
+  if(isFirstSection()){
+    writeComment(sourceComment);
+  }
   var forceToolAndRetract = optionalSection && !currentSection.isOptional();
   optionalSection = currentSection.isOptional();
 
