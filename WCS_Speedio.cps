@@ -1513,13 +1513,13 @@ function protectedProbeMove(_cycle, x, y, z) {
   }
   isFirstProtected = false;
   if (_z && z >= getCurrentPosition().z) {
-    writeBlock(gFormat.format(65), "P" + _code, _z, "M" + mCall, getFeed(cycle.feedrate)); // protected positioning move
+    writeBlock(gFormat.format(65), "P" + _code, _z, "M" + mCall); // protected positioning move
   }
   if (_x || _y) {
-    writeBlock(gFormat.format(65), "P" + _code, _x, _y, "M" + mCall,  getFeed(highFeedrate)); // protected positioning move
+    writeBlock(gFormat.format(65), "P" + _code, _x, _y, "M" + mCall); // protected positioning move
   }
   if (_z && z < getCurrentPosition().z) {
-    writeBlock(gFormat.format(65), "P" + _code, _z, "M" + mCall,  getFeed(cycle.feedrate)); // protected positioning move
+    writeBlock(gFormat.format(65), "P" + _code, _z, "M" + mCall); // protected positioning move
   }
 }
 
@@ -3090,6 +3090,7 @@ function onClose() {
   }
   onImpliedCommand(COMMAND_END);
   onImpliedCommand(COMMAND_STOP_SPINDLE);
+  writeBlock(mFormat.format(211)); //workpiece counter initialize
   writeBlock(mFormat.format(30)); // stop program, spindle stop, coolant off
 }
 
