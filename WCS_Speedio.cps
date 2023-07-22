@@ -3066,6 +3066,7 @@ function onClose() {
   sequenceNumber = 99;
   setProperty("showSequenceNumbers", "true");
   writeBlock(gFormat.format(100), "T" + toolFormat.format(getSection(0).getTool().number) + " G53 X-500 Y0");
+  setProperty("showSequenceNumbers", "false");
   if (useMultiAxisFeatures) {
     writeRetract(Z);
   } else {
