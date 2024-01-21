@@ -76,6 +76,14 @@ properties = {
     value      : true,
     scope      : "post"
   },
+  outputRotCodes: {
+    title      : "Output G68 at every toolpath",
+    description: "Outputs a G68 call on every section that isn't probing",
+    group      : "preferences",
+    type       : "boolean",
+    value      : false,
+    scope      : "post"
+  },
   showSequenceNumbers: {
     title      : "Use sequence numbers",
     description: "'Yes' outputs sequence numbers on each block, 'Only on tool change' outputs sequence numbers on tool change blocks only, and 'No' disables the output of sequence numbers.",
@@ -279,12 +287,12 @@ var singleLineCoolant = false; // specifies to output multiple coolant codes in 
 // {id: COOLANT_THROUGH_TOOL, on: "M88 P3 (myComment)", off: "M89"}
 var coolants = [
   {id:COOLANT_FLOOD, on:8},
-  {id:COOLANT_MIST},
+  {id:COOLANT_MIST, on:[8, 480], off:[9, 481]},
   {id:COOLANT_THROUGH_TOOL, on:494, off:495},
-  {id:COOLANT_AIR},
+  {id:COOLANT_AIR, on:480, off:481},
   {id:COOLANT_AIR_THROUGH_TOOL},
   {id:COOLANT_SUCTION},
-  {id:COOLANT_FLOOD_MIST},
+  {id:COOLANT_FLOOD_MIST, on:[8, 480], off:[9, 481]},
   {id:COOLANT_FLOOD_THROUGH_TOOL, on:[8, 494], off:[9, 495]},
   {id:COOLANT_OFF, off:9}
 ];
@@ -593,7 +601,8 @@ function onOpen() {
 
   // absolute coordinates and feed per min
   writeBlock(gFormat.format(0), gAbsIncModal.format(90), gFormat.format(40), gFormat.format(80));
-  writeBlock(gFeedModeModal.format(94), gFormat.format(49));
+  writeBlock(gFeedModeModal.format(94), gFormat.format(49), gFormat.format(69));
+  writeBlock(gPlaneModal.format(17));
 
   //writeComment("File output in " + (unit == 1 ? "MM" : "inches") + ". Please ensure the unit is set correctly on the control");
   if(unit != 1){
@@ -1187,6 +1196,10 @@ function onSection() {
 
     writeBlock(currentSection.wcs);
     currentWorkOffset = currentSection.workOffset;
+	
+	if(getProperty("outputRotCodes") && tool.type != TOOL_PROBE){
+	  writeBlock("G68 X0 Y0 R[#180]");
+	  }
   }
 
   var abc = new Vector(0, 0, 0);
@@ -1499,14 +1512,17 @@ function setProbeAngle() {
   }
 }
 
-function protectedProbeMove(_cycle, x, y, z) {
+function protectedProbeMove(_cycle, x, y, z, forceM3) {
   var _x = xOutput.format(x);
   var _y = yOutput.format(y);
   var _z = zOutput.format(z);
   var _code = getProperty("probingType") == "Renishaw" ? 8810 : 8703;
   var mCall;
+  if(forceM3){
+	isFirstProtected = false;
+  }
   if(!isFirstSection()){
-	  mCall = getPreviousSection().getTool().type == TOOL_PROBE ? 3 : isFirstProtected ? 1 : 3;
+	  mCall = ((getPreviousSection().getTool().type == TOOL_PROBE) && getPreviousSection().getTool().number == tool.number) ? 3 : isFirstProtected ? 1 : 3;
   }
   else{
 	  mCall = isFirstProtected ? 1 : 3;
@@ -1995,12 +2011,62 @@ function onCyclePoint(x, y, z) {
 			getProbingArguments(cycle, true)
 		);
       break;
+
     case "probing-x-plane-angle":
-        error(localize("X angle probing is not supported."));
-      break;
+		var edgeCoord = x + approach(cycle.approach1) * (cycle.probeClearance + tool.diameter / 2);
+		protectedProbeMove(cycle, x, y, z - cycle.depth);
+      protectedProbeMove(cycle, x, y - 0.5*cycle.probeSpacing, z - cycle.depth);
+      nominalAngle = (cycle.nominalAngle > 0 ? -cycle.nominalAngle : -(360.0 + cycle.nominalAngle));
+      protectedProbeMove(cycle, x, y - 0.5*cycle.probeSpacing, z - cycle.depth);
+      writeBlock(
+        gFormat.format(65), "P" + 8700,
+        "A1",
+        "X" + xyzFormat.format(edgeCoord),
+        getProbingArguments(cycle, false, true)
+      );
+	  writeBlock(gMotionModal.format(0), xOutput.format(x), yOutput.format(y), zOutput.format(z - cycle.depth));
+      protectedProbeMove(cycle, x, y + 0.5*cycle.probeSpacing, z - cycle.depth, true);
+      writeBlock(
+        gFormat.format(65), "P" + 8700,
+        "A1",
+        "D" + xyzFormat.format(nominalAngle),
+        "X" + xyzFormat.format(edgeCoord),
+        getProbingArguments(cycle, false)
+      );
+	  writeBlock(gMotionModal.format(0), xOutput.format(x), yOutput.format(y), zOutput.format(z - cycle.depth));
+	  writeBlock("WHILE[#158GE180]DO1");
+	  writeBlock("#158=#158-180.");
+	  writeBlock("END1");
+	  writeBlock("#180=#158");
+    break;
+	
     case "probing-y-plane-angle":
-        error(localize("Y angle probing is not supported."));
-      break;
+    var edgeCoord = y + approach(cycle.approach1) * (cycle.probeClearance + tool.diameter / 2);
+    protectedProbeMove(cycle, x, y, z - cycle.depth);
+      nominalAngle = (cycle.nominalAngle > 0 ? -cycle.nominalAngle : -(360.0 + cycle.nominalAngle));
+      protectedProbeMove(cycle, x - 0.5*cycle.probeSpacing, y, z - cycle.depth);
+      writeBlock(
+        gFormat.format(65), "P" + 8700,
+        "A1",
+        "Y" + xyzFormat.format(edgeCoord),
+        getProbingArguments(cycle, false, true)
+      );
+	  writeBlock(gMotionModal.format(0), xOutput.format(x), yOutput.format(y), zOutput.format(z - cycle.depth));
+      protectedProbeMove(cycle, x + 0.5*cycle.probeSpacing, y, z - cycle.depth);
+      writeBlock(
+        gFormat.format(65), "P" + 8700,
+        "A1",
+        "D" + xyzFormat.format(nominalAngle),
+        "Y" + xyzFormat.format(edgeCoord),
+        getProbingArguments(cycle, false)
+      );
+      writeBlock(gMotionModal.format(0), xOutput.format(x), yOutput.format(y), zOutput.format(z - cycle.depth));
+	  writeBlock("WHILE[#158GE180]DO1");
+	  writeBlock("#158=#158-360.");
+	  writeBlock("END1");
+	  writeBlock("#180=#158");
+    break;
+	
     case "probing-xy-pcd-hole":
         error(localize("XY PCD hole probing is not supported."));
       break;
@@ -2033,7 +2099,7 @@ function getProbingArguments(cycle, updateWCS, overRideMCall) {
 	if(overRideMCall){
 		mCall = 3;
 	}else if(hasNextSection()){
-		mCall = getNextSection().getTool().type == TOOL_PROBE ? 3 : 2;
+		mCall = ((getNextSection().getTool().type == TOOL_PROBE) && (getNextSection().getTool().number == tool.number )) ? 3 : 2;
 	}else{
 		mCall = 2;
 	}
@@ -2641,12 +2707,12 @@ function onCircular(clockwise, cx, cy, cz, x, y, z, feed) {
     case PLANE_XY:
       writeBlock(gFeedModeModal.format(94), gAbsIncModal.format(90), gPlaneModal.format(17), gMotionModal.format(clockwise ? 2 : 3), iOutput.format(cx - start.x, 0), jOutput.format(cy - start.y, 0), getFeed(feed));
       break;
-    case PLANE_ZX:
-      writeBlock(gFeedModeModal.format(94), gAbsIncModal.format(90), gPlaneModal.format(18), gMotionModal.format(clockwise ? 2 : 3), iOutput.format(cx - start.x, 0), kOutput.format(cz - start.z, 0), getFeed(feed));
-      break;
-    case PLANE_YZ:
-      writeBlock(gFeedModeModal.format(94), gAbsIncModal.format(90), gPlaneModal.format(19), gMotionModal.format(clockwise ? 2 : 3), jOutput.format(cy - start.y, 0), kOutput.format(cz - start.z, 0), getFeed(feed));
-      break;
+    //case PLANE_ZX:
+    //  writeBlock(gFeedModeModal.format(94), gAbsIncModal.format(90), gPlaneModal.format(18), gMotionModal.format(clockwise ? 2 : 3), iOutput.format(cx - start.x, 0), kOutput.format(cz - start.z, 0), getFeed(feed));
+    //  break;
+    //case PLANE_YZ:
+    //  writeBlock(gFeedModeModal.format(94), gAbsIncModal.format(90), gPlaneModal.format(19), gMotionModal.format(clockwise ? 2 : 3), jOutput.format(cy - start.y, 0), kOutput.format(cz - start.z, 0), getFeed(feed));
+    //  break;
     default:
       linearize(tolerance);
     }
@@ -2655,12 +2721,12 @@ function onCircular(clockwise, cx, cy, cz, x, y, z, feed) {
     case PLANE_XY:
       writeBlock(gFeedModeModal.format(94), gAbsIncModal.format(90), gPlaneModal.format(17), gMotionModal.format(clockwise ? 2 : 3), xOutput.format(x), yOutput.format(y), zOutput.format(z), iOutput.format(cx - start.x, 0), jOutput.format(cy - start.y, 0), getFeed(feed));
       break;
-    case PLANE_ZX:
-      writeBlock(gFeedModeModal.format(94), gAbsIncModal.format(90), gPlaneModal.format(18), gMotionModal.format(clockwise ? 2 : 3), xOutput.format(x), yOutput.format(y), zOutput.format(z), iOutput.format(cx - start.x, 0), kOutput.format(cz - start.z, 0), getFeed(feed));
-      break;
-    case PLANE_YZ:
-      writeBlock(gFeedModeModal.format(94), gAbsIncModal.format(90), gPlaneModal.format(19), gMotionModal.format(clockwise ? 2 : 3), xOutput.format(x), yOutput.format(y), zOutput.format(z), jOutput.format(cy - start.y, 0), kOutput.format(cz - start.z, 0), getFeed(feed));
-      break;
+    //case PLANE_ZX:
+    //  writeBlock(gFeedModeModal.format(94), gAbsIncModal.format(90), gPlaneModal.format(18), gMotionModal.format(clockwise ? 2 : 3), xOutput.format(x), yOutput.format(y), zOutput.format(z), iOutput.format(cx - start.x, 0), kOutput.format(cz - start.z, 0), getFeed(feed));
+    //  break;
+    //case PLANE_YZ:
+    //  writeBlock(gFeedModeModal.format(94), gAbsIncModal.format(90), gPlaneModal.format(19), gMotionModal.format(clockwise ? 2 : 3), xOutput.format(x), yOutput.format(y), zOutput.format(z), jOutput.format(cy - start.y, 0), kOutput.format(cz - start.z, 0), getFeed(feed));
+    //  break;
     default:
       linearize(tolerance);
     }
@@ -2673,12 +2739,12 @@ function onCircular(clockwise, cx, cy, cz, x, y, z, feed) {
     case PLANE_XY:
       writeBlock(gFeedModeModal.format(94), gPlaneModal.format(17), gMotionModal.format(clockwise ? 2 : 3), xOutput.format(x), yOutput.format(y), zOutput.format(z), "R" + rFormat.format(r), getFeed(feed));
       break;
-    case PLANE_ZX:
-      writeBlock(gFeedModeModal.format(94), gPlaneModal.format(18), gMotionModal.format(clockwise ? 2 : 3), xOutput.format(x), yOutput.format(y), zOutput.format(z), "R" + rFormat.format(r), getFeed(feed));
-      break;
-    case PLANE_YZ:
-      writeBlock(gFeedModeModal.format(94), gPlaneModal.format(19), gMotionModal.format(clockwise ? 2 : 3), xOutput.format(x), yOutput.format(y), zOutput.format(z), "R" + rFormat.format(r), getFeed(feed));
-      break;
+    //case PLANE_ZX:
+    //  writeBlock(gFeedModeModal.format(94), gPlaneModal.format(18), gMotionModal.format(clockwise ? 2 : 3), xOutput.format(x), yOutput.format(y), zOutput.format(z), "R" + rFormat.format(r), getFeed(feed));
+    //  break;
+    //case PLANE_YZ:
+    //  writeBlock(gFeedModeModal.format(94), gPlaneModal.format(19), gMotionModal.format(clockwise ? 2 : 3), xOutput.format(x), yOutput.format(y), zOutput.format(z), "R" + rFormat.format(r), getFeed(feed));
+    //  break;
     default:
       linearize(tolerance);
     }
@@ -2839,6 +2905,12 @@ function onSectionEnd() {
     writeBlock(gFormat.format(49));
   }
   writeBlock(gPlaneModal.format(17));
+  
+  if (((getCurrentSectionId() + 1) >= getNumberOfSections()) || (tool.number != getNextSection().getTool().number)) {
+	if(getProperty("outputRotCodes") && tool.type != TOOL_PROBE){
+	writeBlock("G69");
+	}
+  }
 
   if (((getCurrentSectionId() + 1) >= getNumberOfSections()) ||
       (tool.number != getNextSection().getTool().number) && tool.breakControl) {
@@ -3057,7 +3129,7 @@ function onClose() {
     writeBlock(mFormat.format(washdownCoolant.off));
   }
   
-  
+  setCoolant(COOLANT_OFF);//turn off coolant
   if(getProperty("useChipFanCall")){
 	  writeBlock("/" + gFormat.format(65), "P" + 2, "X" + chipFanNegX, "R" + chipFanPosX, "B" + chipFanPosY, "C" + chipFanNegY + " (Chip Fan Sub Call)");
   }
