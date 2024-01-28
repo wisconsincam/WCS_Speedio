@@ -651,7 +651,7 @@ var smoothingSettings = {
   finishing             : 0, // finishing level for smoothing in automatic mode
   thresholdRoughing     : toPreciseUnit(0.25, MM), // operations with stock/tolerance above that threshold will use roughing level in automatic mode
   thresholdFinishing    : toPreciseUnit(0.05, MM), // operations with stock/tolerance below that threshold will use finishing level in automatic mode
-  thresholdSemiFinishing: toPreciseUnit(0.1, MM), // operations with stock/tolerance above finishing and below threshold roughing that threshold will use semi finishing level in automatic mode
+  thresholdSemiFinishing: toPreciseUnit(0.24, MM), // operations with stock/tolerance above finishing and below threshold roughing that threshold will use semi finishing level in automatic mode
 
   differenceCriteria: "level", // options: "level", "tolerance", "both". Specifies criteria when output smoothing codes
   autoLevelCriteria : "stock", // use "stock" or "tolerance" to determine levels in automatic mode
@@ -684,7 +684,7 @@ function initializeSmoothing() {
   case "B":
     smoothingSettings.roughing = 9;
     smoothingSettings.semi = 3;
-    smoothingSettings.semifinishing = 1;
+    smoothingSettings.semifinishing = 5;
     smoothingSettings.finishing = 5;//was 2
     smoothing.level = (smoothing.level >= 0 && smoothing.level <= 5) ? [0, 5, 3, 4, 1, 2][smoothing.level] : smoothing.level;
     break;
@@ -2016,7 +2016,7 @@ function onCyclePoint(x, y, z) {
 		var edgeCoord = x + approach(cycle.approach1) * (cycle.probeClearance + tool.diameter / 2);
 		protectedProbeMove(cycle, x, y, z - cycle.depth);
       protectedProbeMove(cycle, x, y - 0.5*cycle.probeSpacing, z - cycle.depth);
-      nominalAngle = (cycle.nominalAngle > 0 ? -cycle.nominalAngle : -(360.0 + cycle.nominalAngle));
+      nominalAngle = (cycle.nominalAngle.toFixed(6) > 0 ? -cycle.nominalAngle : -(360.0 + cycle.nominalAngle));
       protectedProbeMove(cycle, x, y - 0.5*cycle.probeSpacing, z - cycle.depth);
       writeBlock(
         gFormat.format(65), "P" + 8700,
@@ -2043,7 +2043,7 @@ function onCyclePoint(x, y, z) {
     case "probing-y-plane-angle":
     var edgeCoord = y + approach(cycle.approach1) * (cycle.probeClearance + tool.diameter / 2);
     protectedProbeMove(cycle, x, y, z - cycle.depth);
-      nominalAngle = (cycle.nominalAngle > 0 ? -cycle.nominalAngle : -(360.0 + cycle.nominalAngle));
+      nominalAngle = (cycle.nominalAngle.toFixed(6) > 0 ? -cycle.nominalAngle : -(360.0 + cycle.nominalAngle));
       protectedProbeMove(cycle, x - 0.5*cycle.probeSpacing, y, z - cycle.depth);
       writeBlock(
         gFormat.format(65), "P" + 8700,
