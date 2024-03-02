@@ -1580,6 +1580,22 @@ function onCyclePoint(x, y, z) {
     var F = cycle.feedrate;
     var P = !cycle.dwell ? 0 : clamp(.01, cycle.dwell, 99999999); // in seconds
 
+	if(cycleType.indexOf("partial") != -1){
+	  if(cycle.partialCircleAngleA < 0)
+		  cycle.partialCircleAngleA=cycle.partialCircleAngleA+360
+	  if(cycle.partialCircleAngleB < 0)
+		  cycle.partialCircleAngleB=cycle.partialCircleAngleB+360
+	  if(cycle.partialCircleAngleC < 0)
+		  cycle.partialCircleAngleC=cycle.partialCircleAngleC+360
+	  if(cycle.partialCircleAngleA.toFixed(0) == 360)
+		  cycle.partialCircleAngleA=0
+	  if(cycle.partialCircleAngleB.toFixed(0) == 360)
+		  cycle.partialCircleAngleB=0
+	  if(cycle.partialCircleAngleC.toFixed(0) == 360)
+		  cycle.partialCircleAngleC=0
+	}
+
+
     // tapping variables
     var tapUnit = unit;
     if (hasParameter("operation:tool_unit")) {
@@ -1621,16 +1637,13 @@ function onCyclePoint(x, y, z) {
       }
       break;
     case "chip-breaking":
-      if ((cycle.accumulatedDepth < cycle.depth) || (P > 0)) {
-        expandCyclePoint(x, y, z);
-      } else {
         writeBlock(
           gRetractModal.format(98), gCycleModal.format(73),
           getCommonCycle(x, y, cycle.bottom, cycle.retract),
           "Q" + xyzFormat.format(cycle.incrementalDepth),
+		  conditional(P > 0, "P" + secFormat.format(P)),
           cyclefeedOutput.format(F)
         );
-      }
       break;
     case "deep-drilling":
       if (P > 0) {
@@ -1674,8 +1687,9 @@ function onCyclePoint(x, y, z) {
       writeBlock(
         gRetractModal.format(98), gCycleModal.format(76),
         getCommonCycle(x, y, z, cycle.retract),
-        "P" + secFormat.format(P), // not optional
+		conditional(P > 0, "P" + secFormat.format(P)),
         "Q" + xyzFormat.format(cycle.shift),
+		conditional(cycle.shiftOrientation != 0, "V" + xyzFormat.format(cycle.shiftOrientation*(180/Math.PI))),
         feedOutput.format(F)
       );
       break;
@@ -1851,12 +1865,6 @@ function onCyclePoint(x, y, z) {
       break;
     case "probing-xy-circular-partial-boss":
       protectedProbeMove(cycle, x, y, z);
-	  if(cycle.partialCircleAngleA < 0)
-		  cycle.partialCircleAngleA=cycle.partialCircleAngleA+360
-	  if(cycle.partialCircleAngleB < 0)
-		  cycle.partialCircleAngleB=cycle.partialCircleAngleB+360
-	  if(cycle.partialCircleAngleC < 0)
-		  cycle.partialCircleAngleC=cycle.partialCircleAngleC+360
 	  writeBlock(
           gFormat.format(65), "P" + 8700,
           "S" + xyzFormat.format(cycle.width1),
@@ -1882,12 +1890,6 @@ function onCyclePoint(x, y, z) {
       break;
     case "probing-xy-circular-partial-hole":
       protectedProbeMove(cycle, x, y, z - cycle.depth);
-	  if(cycle.partialCircleAngleA < 0)
-		  cycle.partialCircleAngleA=cycle.partialCircleAngleA+360
-	  if(cycle.partialCircleAngleB < 0)
-		  cycle.partialCircleAngleB=cycle.partialCircleAngleB+360
-	  if(cycle.partialCircleAngleC < 0)
-		  cycle.partialCircleAngleC=cycle.partialCircleAngleC+360
       writeBlock(
           gFormat.format(65), "P" + 8700,
           "S" + xyzFormat.format(cycle.width1),
@@ -1913,12 +1915,6 @@ function onCyclePoint(x, y, z) {
       break;
     case "probing-xy-circular-partial-hole-with-island":
 		protectedProbeMove(cycle, x, y, z);
-		if(cycle.partialCircleAngleA < 0)
-		  cycle.partialCircleAngleA=cycle.partialCircleAngleA+360
-	    if(cycle.partialCircleAngleB < 0)
-		  cycle.partialCircleAngleB=cycle.partialCircleAngleB+360
-	    if(cycle.partialCircleAngleC < 0)
-		  cycle.partialCircleAngleC=cycle.partialCircleAngleC+360
 		writeBlock(
           gFormat.format(65), "P" + 8700,
           "S" + xyzFormat.format(cycle.width1),
@@ -3137,7 +3133,7 @@ function onClose() {
   // reload first tool (handles retract)
   sequenceNumber = 99;
   setProperty("showSequenceNumbers", "true");
-  writeBlock(gFormat.format(100), "T" + toolFormat.format(getSection(0).getTool().number) + " G53 X-500 Y0");
+  writeBlock(gFormat.format(100), "T" + toolFormat.format(getSection(0).getTool().number) + " G53 X-600 Y0");
   setProperty("showSequenceNumbers", "false");
   if (useMultiAxisFeatures) {
     writeRetract(Z);
