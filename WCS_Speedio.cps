@@ -1885,6 +1885,7 @@ function onCyclePoint(x, y, z) {
           "S" + xyzFormat.format(cycle.width1),
 		  "I" + xyzFormat.format(x),
 		  "J" + xyzFormat.format(y),
+		  "R" + xyzFormat.format(cycle.probeClearance),
           getProbingArguments(cycle, true)
         );
       break;
@@ -1898,6 +1899,7 @@ function onCyclePoint(x, y, z) {
           "V" + cycle.partialCircleAngleC.toFixed(0),
           "I" + xyzFormat.format(x),
 		  "J" + xyzFormat.format(y),
+		  "R" + xyzFormat.format(cycle.probeClearance),
           getProbingArguments(cycle, true)
 		);
       break;
@@ -1910,6 +1912,7 @@ function onCyclePoint(x, y, z) {
 		  "J" + xyzFormat.format(y),
 		  "R" + -xyzFormat.format(cycle.probeClearance),
 		  "Z" + xyzFormat.format(-cycle.depth),
+		  "R" + xyzFormat.format(cycle.probeClearance),
           getProbingArguments(cycle, true)
         );
       break;
@@ -1925,6 +1928,7 @@ function onCyclePoint(x, y, z) {
 		  "J" + xyzFormat.format(y),
 		  "R" + -xyzFormat.format(cycle.probeClearance),
 		  "Z" + xyzFormat.format(-cycle.depth),
+		  "R" + xyzFormat.format(cycle.probeClearance),
           getProbingArguments(cycle, true)
 		);
       break;
