@@ -1248,7 +1248,7 @@ function onSection() {
   if (insertToolCall) {
     forceWorkPlane();
 
-    setCoolant(COOLANT_OFF);
+    //setCoolant(COOLANT_OFF);
 
     if (!isFirstSection() && getProperty("optionalStop")) {
       onCommand(COMMAND_OPTIONAL_STOP);
@@ -1257,6 +1257,20 @@ function onSection() {
     if (tool.number > 99) {
       warning(localize("Tool number exceeds maximum value."));
     }
+
+var g100coolants = new Array();
+if (!isFirstSection() && (getPreviousSection().getTool().coolant != tool.coolant)) {
+    g100coolants.push(returnCoolants(COOLANT_OFF));
+  }
+g100coolants.push(returnCoolants(tool.coolant));
+g100coolants=g100coolants.toString();
+if(g100coolants.indexOf("M09")>-1 && g100coolants.indexOf("M08")>-1){
+	g100coolants=g100coolants.replace("M09","");
+}
+if(g100coolants.indexOf("M494")>-1 && g100coolants.indexOf("M495")>-1){
+	g100coolants=g100coolants.replace("M495","");
+}
+g100coolants=g100coolants.replace(","," ");
 
     writeToolBlock(gFormat.format(100),
       "T" + toolFormat.format(tool.number),
@@ -1269,7 +1283,8 @@ function onSection() {
       conditional(!useMultiAxisFeatures, hFormat.format(tool.lengthOffset)),
       conditional(tool.type != TOOL_PROBE, dFormat.format(tool.diameterOffset)),
       conditional(tool.type != TOOL_PROBE, sOutput.format(spindleSpeed)),
-      conditional(tool.type != TOOL_PROBE && !isTappingCycle(currentSection), mFormat.format(tool.clockwise ? 3 : 4))
+      conditional(tool.type != TOOL_PROBE && !isTappingCycle(currentSection), mFormat.format(tool.clockwise ? 3 : 4)),
+	  g100coolants
     );
     forceSpindleSpeed = false;
 
@@ -1336,7 +1351,7 @@ function onSection() {
   setProbeAngle(); // output probe angle rotations if required
 
   // set coolant after we have positioned at Z
-  setCoolant(tool.coolant);
+  //setCoolant(tool.coolant);
   // add dwell for through coolant if needed
   if (tool.coolant == COOLANT_THROUGH_TOOL || tool.coolant == COOLANT_AIR_THROUGH_TOOL || tool.coolant == COOLANT_FLOOD_THROUGH_TOOL) {
     if (isFirstSection()) {
@@ -1910,9 +1925,8 @@ function onCyclePoint(x, y, z) {
           "S" + xyzFormat.format(cycle.width1),
 		  "I" + xyzFormat.format(x),
 		  "J" + xyzFormat.format(y),
-		  "R" + -xyzFormat.format(cycle.probeClearance),
 		  "Z" + xyzFormat.format(-cycle.depth),
-		  "R" + xyzFormat.format(cycle.probeClearance),
+		  "R" + -xyzFormat.format(cycle.probeClearance),
           getProbingArguments(cycle, true)
         );
       break;
@@ -1926,9 +1940,8 @@ function onCyclePoint(x, y, z) {
           "V" + cycle.partialCircleAngleC.toFixed(0),
           "I" + xyzFormat.format(x),
 		  "J" + xyzFormat.format(y),
-		  "R" + -xyzFormat.format(cycle.probeClearance),
 		  "Z" + xyzFormat.format(-cycle.depth),
-		  "R" + xyzFormat.format(cycle.probeClearance),
+		  "R" + -xyzFormat.format(cycle.probeClearance),
           getProbingArguments(cycle, true)
 		);
       break;
@@ -2149,6 +2162,11 @@ function onLinear(_x, _y, _z, feed) {
   var y = yOutput.format(_y);
   var z = zOutput.format(_z);
   var f = getFeed(feed);
+  if((movement == MOVEMENT_LINK_DIRECT || movement == MOVEMENT_LINK_TRANSITION) && smoothing.level != 9){
+	setSmoothing(false);
+  }else{
+	setSmoothing(true);
+  }
   if (x || y || z) {
     if (pendingRadiusCompensation >= 0) {
       pendingRadiusCompensation = -1;
@@ -2772,6 +2790,14 @@ function setCoolant(coolant) {
   return coolantCodes;
 }
 
+function returnCoolants(coolant) {
+  var coolantCodes = getCoolantCodes(coolant);
+  if (Array.isArray(coolantCodes)) {
+      return coolantCodes.join(getWordSeparator());
+    }
+  return coolantCodes;
+}
+
 function getCoolantCodes(coolant) {
   var multipleCoolantBlocks = new Array(); // create a formatted array to be passed into the outputted line
   if (!coolants) {
@@ -2930,7 +2956,7 @@ function onSectionEnd() {
     writeBlock(mFormat.format(washdownCoolant.off));
   }
   if (!isLastSection() && (getNextSection().getTool().coolant != tool.coolant)) {
-    setCoolant(COOLANT_OFF);
+    //setCoolant(COOLANT_OFF);
   }
   if (isProbeOperation() && hasNextSection() && !(getNextSection().getTool().type == TOOL_PROBE)) {
 	writeBlock(mFormat.format(299));//allow high accuracy mode again after probing
@@ -3176,4 +3202,11 @@ function onPassThrough(text) {
   for (text in commands) {
     writeBlock(commands[text]);
   }
+}
+function removeItemOnce(arr, value) {
+  var index = arr.indexOf(value);
+  if (index > -1) {
+    arr.splice(index, 1);
+  }
+  return arr;
 }
