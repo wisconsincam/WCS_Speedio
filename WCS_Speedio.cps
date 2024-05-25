@@ -2057,20 +2057,24 @@ function onCyclePoint(x, y, z) {
     var edgeCoord = y + approach(cycle.approach1) * (cycle.probeClearance + tool.diameter / 2);
     protectedProbeMove(cycle, x, y, z - cycle.depth);
       nominalAngle = (cycle.nominalAngle.toFixed(6) > 0 ? -cycle.nominalAngle : -(360.0 + cycle.nominalAngle));
-      protectedProbeMove(cycle, x - 0.5*cycle.probeSpacing, y, z - cycle.depth);
+	  xComponent=0.5*cycle.probeSpacing*Math.cos(toRad(cycle.nominalAngle));
+	  yComponent=0.5*cycle.probeSpacing*Math.sin(toRad(cycle.nominalAngle));
+	  writeComment(xComponent);
+	  writeComment(yComponent);
+      protectedProbeMove(cycle, x - xComponent, y - yComponent, z - cycle.depth);
       writeBlock(
         gFormat.format(65), "P" + 8700,
         "A1",
-        "Y" + xyzFormat.format(edgeCoord),
+        "Y" + xyzFormat.format(edgeCoord - yComponent),
         getProbingArguments(cycle, false, true)
       );
 	  writeBlock(gMotionModal.format(0), xOutput.format(x), yOutput.format(y), zOutput.format(z - cycle.depth));
-      protectedProbeMove(cycle, x + 0.5*cycle.probeSpacing, y, z - cycle.depth);
+      protectedProbeMove(cycle, x + xComponent, y + yComponent, z - cycle.depth);
       writeBlock(
         gFormat.format(65), "P" + 8700,
         "A1",
         "D" + xyzFormat.format(nominalAngle),
-        "Y" + xyzFormat.format(edgeCoord),
+        "Y" + xyzFormat.format(edgeCoord + yComponent),
         getProbingArguments(cycle, false)
       );
       writeBlock(gMotionModal.format(0), xOutput.format(x), yOutput.format(y), zOutput.format(z - cycle.depth));
